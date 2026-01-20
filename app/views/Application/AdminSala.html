@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin - Salas</title>
+    <link rel="stylesheet" href="@{'/public/stylesheets/main.css'}">
+</head>
+<body>
+
+<header class="header">
+    <h1>Concertify</h1>
+    <div class="nav">
+        <div class="nav-left">
+            <a href="/">Inicio</a>
+        </div>
+
+        <div class="nav-right">
+            <a href="/admin/artistas">Gestion Artistas</a>
+            <a href="/admin/salas">Gestion Salas</a>
+            <a href="/admin/conciertos">Gestion Conciertos</a>
+            <a href="/admin/logout">Cerrar Sesión Admin</a>
+        </div>
+    </div>
+</header>
+
+<main class="page">
+
+    <div class="section-title">
+        <h2>Gestión de Salas</h2>
+    </div>
+
+    #{if flash.error}
+    <p class="msg msg-error">${flash.error}</p>
+    #{/if}
+    #{if flash.success}
+    <p class="msg msg-ok">${flash.success}</p>
+    #{/if}
+
+    <div class="admin-grid">
+
+        <div class="admin-card">
+            <h3>Registrar sala</h3>
+
+            #{form @Application.adminGuardarSala()}
+
+            <div class="form-group">
+                <label>Nombre</label>
+                <input type="text" name="nombre" value="">
+            </div>
+
+            <div class="form-group">
+                <label>Dirección / Ciudad</label>
+                <input type="text" name="direccion" value="">
+            </div>
+
+            <div class="form-group">
+                <label>Capacidad</label>
+                <input type="text" name="capacidad" value="">
+            </div>
+            <button type="submit">Crear sala</button>
+            #{/form}
+        </div>
+
+        <div class="admin-card">
+            <h3>Listado de salas</h3>
+
+            <table class="admin-table">
+                <thead>
+                <tr>
+                    <th class="col-center">Nombre</th>
+                    <th class="col-center">Dirección</th>
+                    <th class="col-center">Capacidad</th>
+                    <th class="col-center">Acciones</th>
+                </tr>
+                </thead>
+
+                <tbody>
+                #{list items:salas, as:'s'}
+                <tr>
+                    <td class="col-center">${s.nombre}</td>
+                    <td class="col-center">${s.direccion}</td>
+                    <td class="col-center">${s.capacidad}</td>
+                    <td class="actions">
+                        <button type="button"
+                                class="btn btn-soft js-edit-sala"
+                                data-id="${s.id}"
+                                data-nombre="${s.nombre}"
+                                data-direccion="${s.direccion}"
+                                data-capacidad="${s.capacidad}">
+                            Editar
+                        </button>
+
+                        #{form @Application.adminEliminarSala()}
+                        <input type="hidden" name="id" value="${s.id}">
+                        <button class="btn btn-danger" type="submit">Eliminar</button>
+                        #{/form}
+                    </td>
+                </tr>
+                #{/list}
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+
+</main>
+
+<footer class="footer">© 2025 Concertify</footer>
+
+<div class="modal-overlay ${showSalaModal ? 'is-open' : ''}" id="salaModal">
+    <div class="modal">
+        <div class="modal-header">
+            <h3>Editar sala</h3>
+            <button type="button" class="modal-close" id="closeSalaModal">×</button>
+        </div>
+
+        #{form @Application.adminGuardarSala()}
+        <input type="hidden" name="id" id="sala_id" value="${salaEdit != null ? salaEdit.id : ''}">
+
+        <div class="form-group">
+            <label>Nombre</label>
+            <input type="text" name="nombre" id="sala_nombre" required
+                   value="${salaEdit != null ? salaEdit.nombre : ''}">
+
+            #{if nombreSalaError}
+            <div class="field-error">${nombreSalaError}</div>
+            #{/if}
+        </div>
+
+        <div class="form-group">
+            <label>Dirección / Ciudad</label>
+            <input type="text" name="direccion" id="sala_direccion" required
+                   value="${salaEdit != null ? salaEdit.direccion : ''}">
+        </div>
+
+        <div class="form-group">
+            <label>Capacidad</label>
+            <input type="number" name="capacidad" id="sala_capacidad" min="1" required
+                   value="${salaEdit != null ? salaEdit.capacidad : ''}">
+        </div>
+
+        <button type="submit">Guardar</button>
+        <button type="button" class="btn btn-soft" id="cancelSalaModal">Cancelar</button>
+        #{/form}
+    </div>
+</div>
+
+<script>
+    (function () {
+      const overlay = document.getElementById('salaModal');
+      const closeBtn = document.getElementById('closeSalaModal');
+      const cancelBtn = document.getElementById('cancelSalaModal');
+
+      const idEl = document.getElementById('sala_id');
+      const nEl  = document.getElementById('sala_nombre');
+      const dEl  = document.getElementById('sala_direccion');
+      const cEl  = document.getElementById('sala_capacidad');
+
+      function openModal() { overlay.classList.add('is-open'); }
+      function closeModal() { overlay.classList.remove('is-open'); }
+
+      document.querySelectorAll('.js-edit-sala').forEach(btn => {
+        btn.addEventListener('click', () => {
+          idEl.value = btn.dataset.id || '';
+          nEl.value  = btn.dataset.nombre || '';
+          dEl.value  = btn.dataset.direccion || '';
+          cEl.value  = btn.dataset.capacidad || '1';
+          openModal();
+        });
+      });
+
+      closeBtn.addEventListener('click', closeModal);
+      cancelBtn.addEventListener('click', closeModal);
+
+      overlay.addEventListener('click', (ev) => {
+        if (ev.target === overlay) closeModal();
+      });
+    })();
+</script>
+</body>
+</html>

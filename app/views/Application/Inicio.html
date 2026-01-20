@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>ClassePEs</title>
+
+    <link rel="stylesheet" href="@{'/public/stylesheets/main.css'}">
+</head>
+
+<body>
+
+<header class="header">
+    <h1>Concertify</h1>
+    <div class="nav">
+        <div class="nav-left">
+            <a href="/">Inicio</a>
+        </div>
+
+        <div class="nav-right">
+
+            #{if session.get("isAdmin") != null}
+            <a href="/admin/artistas">Gestion Artistas</a>
+            <a href="/admin/salas">Gestion Salas</a>
+            <a href="/admin/conciertos">Gestion Conciertos</a>
+            <a href="/admin/logout">Cerrar Sesión Admin</a>
+            #{/if}
+
+            #{elseif session.get("username") != null}
+            <span>Hola ${session.get("username")} </span>
+            <a href="/logout">Cerrar Sesión</a>
+            #{/elseif}
+
+            #{else}
+            <a href="/login">Iniciar Sesión</a>
+            <a href="/registre">Registrarse</a>
+            #{/else}
+
+        </div>
+
+    </div>
+</header>
+
+<main class="main-home">
+    <div class="menu-bar">
+        <a class="menu-button" href="/artistas">Artistas</a>
+        <a class="menu-button" href="/conciertos">Conciertos</a>
+        <a class="menu-button" href="/salas">Salas</a>
+    </div>
+</main>
+
+<footer class="footer">
+    © 2025 Concertify
+</footer>
+
+</body>
+</html>

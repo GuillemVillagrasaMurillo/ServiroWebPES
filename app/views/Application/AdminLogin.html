@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Login</title>
+    <link rel="stylesheet" href="@{'/public/stylesheets/main.css'}">
+</head>
+<body>
+
+<header class="header">
+    <h1>Concertify</h1>
+    <div class="nav">
+        <div class="nav-left">
+            <a href="/">Inicio</a>
+        </div>
+    </div>
+</header>
+
+<main class="main">
+    <h2>Acceso Administrador</h2>
+
+    #{if flash.error}
+    <p style="margin: 10px 0; font-weight: 700;">${flash.error}</p>
+    #{/if}
+
+    #{form @Application.doAdminLogin()}
+
+    <div class="form-group">
+        <label>Usuario administrador</label>
+        <input type="text" name="u"
+               value="${flash.get('adminUserValue') ?: ''}"
+               required>
+
+        #{if flash.get("errorAdminUser")}
+        <div class="field-error">${flash.get("errorAdminUser")}</div>
+        #{/if}
+    </div>
+
+    <div class="form-group">
+        <label>Contraseña</label>
+        <input type="password" name="p" required>
+
+        #{if flash.get("errorAdminPass")}
+        <div class="field-error">${flash.get("errorAdminPass")}</div>
+        #{/if}
+    </div>
+
+    <button type="submit">Entrar</button>
+
+    #{/form}
+</main>
+
+<footer class="footer">
+    © 2025 Concertify
+</footer>
+
+</body>
+</html>

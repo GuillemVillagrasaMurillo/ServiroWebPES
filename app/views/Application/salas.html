@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Salas</title>
+    <link rel="stylesheet" href="@{'/public/stylesheets/main.css'}">
+</head>
+
+<body>
+
+<header class="header">
+    <h1>Concertify</h1>
+
+    <div class="nav">
+        <div class="nav-left">
+            <a href="/">Inicio</a>
+        </div>
+
+        <div class="nav-right">
+
+            #{if session.get("isAdmin") != null}
+            <a href="/admin/artistas">Gestion Artistas</a>
+            <a href="/admin/salas">Gestion Salas</a>
+            <a href="/admin/conciertos">Gestion Conciertos</a>
+            <a href="/admin/logout">Cerrar Sesión Admin</a>
+            #{/if}
+
+            #{elseif session.get("username") != null}
+            <span>Hola ${session.get("username")} </span>
+            <a href="/logout">Cerrar Sesión</a>
+            #{/elseif}
+
+            #{else}
+            <a href="/login">Iniciar Sesión</a>
+            <a href="/registre">Registrarse</a>
+            #{/else}
+
+        </div>
+    </div>
+</header>
+
+<main class="page">
+    <div class="section-title">
+        <h2>Salas</h2>
+    </div>
+
+    <div class="cards-grid">
+        #{list items:salas, as:'s'}
+        <div class="card">
+            <div class="card-img">
+                <div class="avatar">
+                    ${s.nombre.substring(0,1).toUpperCase()}
+                </div>
+            </div>
+
+            <div class="card-body">
+                <div class="card-title">${s.nombre}</div>
+                <div class="card-subtitle">${s.direccion}</div>
+
+                <div class="card-meta">
+                    Aforo: <strong>${s.capacidad}</strong><br>
+                    Conciertos: ${s.conciertos.size()}
+                </div>
+
+                <div class="card-actions">
+                    <button type="button"
+                            class="btn btn-soft js-sala-details"
+                            data-nombre="${s.nombre}"
+                            data-direccion="${s.direccion}"
+                            data-capacidad="${s.capacidad}"
+                            data-conciertos="${s.conciertos != null ? s.conciertos.size() : 0}">
+                        Detalles
+                    </button>
+                    #{if s.conciertos != null && s.conciertos.size() > 0}
+                    #{set first:s.conciertos.get(0) /}
+                    <button type="button"
+                            class="btn btn-primary js-sala-concerts"
+                            data-fecha="${first.fecha}"
+                            data-estado="${first.estado}"
+                            data-artista="${first.artista != null ? first.artista.nombre_artistico : '-'}"
+                            data-concerts-id="concerts_sala_${s.id}">
+                        Conciertos
+                    </button>
+                    #{/if}
+                    <div id="concerts_sala_${s.id}" style="display:none;">
+                        #{if s.conciertos != null && s.conciertos.size() > 1}
+                        #{set first:s.conciertos.get(0) /}
+                        #{list items:s.conciertos, as:'c'}
+                        #{if c.id != first.id}
+                        <div class="other-concert">
+                            <p><strong>Artista:</strong> ${c.artista != null ? c.artista.nombre_artistico : '-'}</p>
+                            <p><strong>Fecha:</strong> ${c.fecha}</p>
+                            <p><strong>Estado:</strong> ${c.estado}</p>
+                        </div>
+                        <hr style="margin: 10px 0;">
+                        #{/if}
+                        #{/list}
+                        #{/if}
+                    </div>
+                </div>
+            </div>
+        </div>
+        #{/list}
+    </div>
+</main>
+
+<footer class="footer">
+    © 2025 Concertify
+</footer>
+
+<div class="modal-overlay" id="salaDetailsModal">
+    <div class="modal">
+        <div class="modal-header">
+            <h3>Detalles de la sala</h3>
+            <button type="button" class="modal-close" id="closeSalaDetails">×</button>
+        </div>
+
+        <div class="modal-content">
+            <p><strong>Nombre:</strong> <span id="det_sala_nombre"></span></p>
+            <p><strong>Dirección / Ciudad:</strong> <span id="det_sala_direccion"></span></p>
+            <p><strong>Capacidad:</strong> <span id="det_sala_capacidad"></span></p>
+            <p><strong>Nº conciertos:</strong> <span id="det_sala_conciertos"></span></p>
+        </div>
+
+        <div style="margin-top: 14px;">
+            <button type="button" class="btn btn-soft" id="okSalaDetails">Cerrar</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function () {
+      const overlay = document.getElementById('salaDetailsModal');
+      const closeBtn = document.getElementById('closeSalaDetails');
+      const okBtn = document.getElementById('okSalaDetails');
+
+      const nEl = document.getElementById('det_sala_nombre');
+      const dEl = document.getElementById('det_sala_direccion');
+      const cEl = document.getElementById('det_sala_capacidad');
+      const kEl = document.getElementById('det_sala_conciertos');
+
+      function openModal() { overlay.classList.add('is-open'); }
+      function closeModal() { overlay.classList.remove('is-open'); }
+
+      document.querySelectorAll('.js-sala-details').forEach(btn => {
+        btn.addEventListener('click', () => {
+          nEl.textContent = btn.dataset.nombre || '-';
+          dEl.textContent = btn.dataset.direccion || '-';
+          cEl.textContent = btn.dataset.capacidad || '-';
+          kEl.textContent = btn.dataset.conciertos || '0';
+          openModal();
+        });
+      });
+
+      closeBtn.addEventListener('click', closeModal);
+      okBtn.addEventListener('click', closeModal);
+
+      overlay.addEventListener('click', (ev) => {
+        if (ev.target === overlay) closeModal();
+      });
+    })();
+</script>
+
+<div class="modal-overlay" id="salaConciertosModal">
+    <div class="modal">
+        <div class="modal-header">
+            <h3>Conciertos de la sala</h3>
+            <button type="button" class="modal-close" id="closeSalaConciertos">×</button>
+        </div>
+
+        <div class="modal-content">
+            <p><strong>Artista:</strong> <span id="det_sala_concierto_artista"></span></p>
+            <p><strong>Fecha:</strong> <span id="det_sala_concierto_fecha"></span></p>
+            <p><strong>Estado:</strong> <span id="det_sala_concierto_estado"></span></p>
+
+            <div id="det_sala_conciertos_block" style="display:none;">
+                <hr style="margin: 12px 0;">
+                <p><strong>Otros conciertos:</strong></p>
+                <div id="det_sala_conciertos_list"></div>
+            </div>
+        </div>
+
+        <div style="margin-top: 14px;">
+            <button type="button" class="btn btn-soft" id="okSalaConciertos">Cerrar</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function () {
+      const overlay = document.getElementById('salaConciertosModal');
+      const closeBtn = document.getElementById('closeSalaConciertos');
+      const okBtn = document.getElementById('okSalaConciertos');
+
+      const aEl = document.getElementById('det_sala_concierto_artista');
+      const fEl = document.getElementById('det_sala_concierto_fecha');
+      const eEl = document.getElementById('det_sala_concierto_estado');
+
+      const concertsBlock = document.getElementById('det_sala_conciertos_block');
+      const concertsList  = document.getElementById('det_sala_conciertos_list');
+
+      function openModal() { overlay.classList.add('is-open'); }
+      function closeModal() { overlay.classList.remove('is-open'); }
+
+      document.querySelectorAll('.js-sala-concerts').forEach(btn => {
+        btn.addEventListener('click', () => {
+          // Concierto principal (primero)
+          aEl.textContent = btn.dataset.artista || '-';
+          fEl.textContent = btn.dataset.fecha || '-';
+          eEl.textContent = btn.dataset.estado || '-';
+
+          // Otros conciertos (desde el div oculto)
+          const sourceId = btn.dataset.concertsId;
+          const source = document.getElementById(sourceId);
+          const html = (source && source.innerHTML) ? source.innerHTML.trim() : "";
+
+          if (!html) {
+            concertsBlock.style.display = "none";
+            concertsList.innerHTML = "";
+          } else {
+            concertsBlock.style.display = "block";
+            concertsList.innerHTML = html;
+          }
+
+          openModal();
+        });
+      });
+
+      closeBtn.addEventListener('click', closeModal);
+      okBtn.addEventListener('click', closeModal);
+
+      overlay.addEventListener('click', (ev) => {
+        if (ev.target === overlay) closeModal();
+      });
+    })();
+</script>
+</body>
+</html>

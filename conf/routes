@@ -1,0 +1,57 @@
+# Routes
+# This file defines all application routes (Higher priority routes first)
+# ~~~~
+
+# Home page
+GET     /                                       Application.index
+
+GET   /login                                    Application.login
+POST  /login                                    Application.doLogIn
+
+GET   /registre                                 Application.registre
+POST  /registre                                 Application.doRegistre
+
+GET   /logout                                   Application.logout
+
+GET   /artistas                                 Application.artistas
+
+GET   /conciertos                               Application.conciertos
+
+GET   /salas                                    Application.salas
+
+
+
+GET   /admin/login                              Application.adminLogin
+POST  /admin/login                              Application.doAdminLogin
+
+GET   /admin/logout                             Application.adminLogout
+
+GET   /admin                                    Application.adminPanel
+
+GET   /admin/salas                              Application.adminSalas
+POST  /admin/salas/save                         Application.adminGuardarSala
+POST  /admin/salas/delete                       Application.adminEliminarSala
+
+GET   /admin/artistas                           Application.adminArtistas
+POST  /admin/artistas/save                      Application.adminGuardarArtista
+POST  /admin/artistas/delete                    Application.adminEliminarArtista
+
+GET   /admin/conciertos                         Application.adminConciertos
+POST  /admin/conciertos/save                    Application.adminGuardarConcierto
+POST  /admin/conciertos/delete                  Application.adminEliminarConcierto
+
+GET   /api/ping     Api.ping
+POST  /api/login    Api.login
+
+POST   /api/register     Api.register
+
+GET   /session/fromToken     Application.fromToken
+
+# Ignore favicon requests
+GET     /favicon.ico                            404
+
+# Map static resources from the /app/public folder to the /public path
+GET     /public/                                staticDir:public
+
+# Catch all
+*       /{controller}/{action}                  {controller}.{action}

@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin - Conciertos</title>
+    <link rel="stylesheet" href="@{'/public/stylesheets/main.css'}">
+</head>
+<body>
+
+<header class="header">
+    <h1>Concertify</h1>
+    <div class="nav">
+        <div class="nav-left">
+            <a href="/">Inicio</a>
+        </div>
+
+        <div class="nav-right">
+            <a href="/admin/artistas">Gestion Artistas</a>
+            <a href="/admin/salas">Gestion Salas</a>
+            <a href="/admin/conciertos">Gestion Conciertos</a>
+            <a href="/admin/logout">Cerrar Sesión Admin</a>
+        </div>
+    </div>
+</header>
+
+<main class="page">
+
+    <div class="section-title">
+        <h2>Gestión de Conciertos</h2>
+    </div>
+
+    #{if flash.error}
+    <p class="msg msg-error">${flash.error}</p>
+    #{/if}
+    #{if flash.success}
+    <p class="msg msg-ok">${flash.success}</p>
+    #{/if}
+
+    <div class="admin-grid">
+
+        <div class="admin-card">
+            <h3>Registrar concierto</h3>
+
+            #{form @Application.adminGuardarConcierto()}
+
+            <div class="form-group">
+                <label>Fecha (YYYY-MM-DD)</label>
+                <input type="text" name="fecha" value="">
+            </div>
+
+            <div class="form-group">
+                <label>Estado</label>
+                <select name="estado" required>
+                    <option value="Confirmado" ${conciertoEdit != null && conciertoEdit.estado == 'Confirmado' ? 'selected' : ''}>Confirmado</option>
+                    <option value="Pendiente" ${conciertoEdit != null && conciertoEdit.estado == 'Pendiente' ? 'selected' : ''}>Pendiente</option>
+                    <option value="Cancelado" ${conciertoEdit != null && conciertoEdit.estado == 'Cancelado' ? 'selected' : ''}>Cancelado</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Artista</label>
+                <select name="artistaId" required>
+                    <option value="">-- Selecciona artista --</option>
+                    #{list items:artistas, as:'a'}
+                    <option value="${a.id}"
+                            ${conciertoEdit != null && conciertoEdit.artista != null && conciertoEdit.artista.id == a.id ? 'selected' : ''}>
+                    ${a.nombre_artistico}
+                    </option>
+                    #{/list}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Sala</label>
+                <select name="salaId" required>
+                    <option value="">-- Selecciona sala --</option>
+                    #{list items:salas, as:'s'}
+                    <option value="${s.id}"
+                            ${conciertoEdit != null && conciertoEdit.sala != null && conciertoEdit.sala.id == s.id ? 'selected' : ''}>
+                    ${s.nombre} (${s.direccion})
+                    </option>
+                    #{/list}
+                </select>
+            </div>
+
+            <button type="submit">Crear concierto</button>
+
+            #{/form}
+        </div>
+
+        <div class="admin-card">
+            <h3>Listado de conciertos</h3>
+
+            <table class="admin-table">
+                <thead>
+                <tr>
+                    <th class="col-center">Fecha</th>
+                    <th class="col-center">Estado</th>
+                    <th class="col-center">Artista</th>
+                    <th class="col-center">Sala</th>
+                    <th class="col-center">Acciones</th>
+                </tr>
+                </thead>
+
+                <tbody>
+                #{list items:conciertos, as:'c'}
+                <tr>
+                    <td class="col-center">${c.fecha}</td>
+                    <td class="col-center">${c.estado}</td>
+                    <td class="col-center">${c.artista != null ? c.artista.nombre_artistico : '-'}</td>
+                    <td class="col-center">${c.sala != null ? c.sala.nombre : '-'}</td>
+                    <td class="actions">
+                        <button type="button"
+                                class="btn btn-soft js-edit-concierto"
+                                data-id="${c.id}"
+                                data-fecha="${c.fecha}"
+                                data-estado="${c.estado}"
+                                data-artistaid="${c.artista != null ? c.artista.id : ''}"
+                                data-salaid="${c.sala != null ? c.sala.id : ''}">
+                            Editar
+                        </button>
+
+                        #{form @Application.adminEliminarConcierto()}
+                        <input type="hidden" name="id" value="${c.id}">
+                        <button class="btn btn-danger" type="submit">Eliminar</button>
+                        #{/form}
+                    </td>
+                </tr>
+                #{/list}
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+
+</main>
+
+<footer class="footer">© 2025 Concertify</footer>
+
+<div class="modal-overlay ${showConciertoModal ? 'is-open' : ''}" id="conciertoModal">
+    <div class="modal">
+        <div class="modal-header">
+            <h3>Editar concierto</h3>
+            <button type="button" class="modal-close" id="closeConciertoModal">×</button>
+        </div>
+
+        #{form @Application.adminGuardarConcierto()}
+        <input type="hidden" name="id" id="concierto_id"
+               value="${conciertoEdit != null ? conciertoEdit.id : ''}">
+
+        <div class="form-group">
+            <label>Fecha (YYYY-MM-DD)</label>
+            <input type="text" name="fecha" id="concierto_fecha" required
+                   value="${conciertoEdit != null ? conciertoEdit.fecha : ''}">
+
+            #{if fechaConciertoError}
+            <div class="field-error">${fechaConciertoError}</div>
+            #{/if}
+        </div>
+
+        <div class="form-group">
+            <label>Estado</label>
+            <select name="estado" id="concierto_estado" required>
+                <option value="Confirmado">Confirmado</option>
+                <option value="Pendiente">Pendiente</option>
+                <option value="Cancelado">Cancelado</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Artista</label>
+            <select name="artistaId" id="concierto_artista" required>
+                <option value="">-- Selecciona artista --</option>
+                #{list items:artistas, as:'a'}
+                <option value="${a.id}">${a.nombre_artistico}</option>
+                #{/list}
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Sala</label>
+            <select name="salaId" id="concierto_sala" required>
+                <option value="">-- Selecciona sala --</option>
+                #{list items:salas, as:'s'}
+                <option value="${s.id}">${s.nombre} (${s.direccion})</option>
+                #{/list}
+            </select>
+        </div>
+
+        <button type="submit">Guardar</button>
+        <button type="button" class="btn btn-soft" id="cancelConciertoModal">Cancelar</button>
+        #{/form}
+    </div>
+</div>
+
+<script>
+    (function () {
+      const overlay = document.getElementById('conciertoModal');
+      const closeBtn = document.getElementById('closeConciertoModal');
+      const cancelBtn = document.getElementById('cancelConciertoModal');
+
+      const idEl = document.getElementById('concierto_id');
+      const fEl  = document.getElementById('concierto_fecha');
+      const estEl = document.getElementById('concierto_estado');
+      const artEl = document.getElementById('concierto_artista');
+      const salEl = document.getElementById('concierto_sala');
+
+      function openModal() { overlay.classList.add('is-open'); }
+      function closeModal() { overlay.classList.remove('is-open'); }
+
+      function setSelectValue(selectEl, value) {
+        if (!value) return;
+        for (const opt of selectEl.options) {
+          if (String(opt.value) === String(value)) {
+            opt.selected = true;
+            return;
+          }
+        }
+      }
+
+      document.querySelectorAll('.js-edit-concierto').forEach(btn => {
+        btn.addEventListener('click', () => {
+          idEl.value = btn.dataset.id || '';
+          fEl.value = btn.dataset.fecha || '';
+
+          estEl.value = btn.dataset.estado || 'Pendiente';
+
+          artEl.value = '';
+          salEl.value = '';
+          setSelectValue(artEl, btn.dataset.artistaid);
+          setSelectValue(salEl, btn.dataset.salaid);
+
+          openModal();
+        });
+      });
+
+      closeBtn.addEventListener('click', closeModal);
+      cancelBtn.addEventListener('click', closeModal);
+
+      overlay.addEventListener('click', (ev) => {
+        if (ev.target === overlay) closeModal();
+      });
+    })();
+</script>
+</body>
+</html>

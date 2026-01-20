@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Iniciar sesión</title>
+
+    <link rel="stylesheet" href="@{'/public/stylesheets/main.css'}">
+</head>
+
+<body>
+
+<header class="header">
+    <h1>Concertify</h1>
+    <div class="nav">
+        <div class="nav-left">
+            <a href="/">Inicio</a>
+        </div>
+
+        <div class="nav-right">
+            #{if session.get("username") != null}
+            <span>Hola ${session.get("username")} </span>
+            <a href="/logout">Cerrar Sesión</a>
+            #{/if}
+
+            #{else}
+            <a href="/registre">Registrarse</a>
+            #{/else}
+
+        </div>
+
+    </div>
+</header>
+
+<main class="main">
+    <h2>Iniciar sesión</h2>
+
+    #{form @Application.doLogIn(), novalidate:'novalidate'}
+
+    <div class="form-group">
+        <label>Nombre</label>
+        <input type="text" name="n2">
+
+        #{if flash.get("errorUser")}
+        <div class="field-error">${flash.get("errorUser")}</div>
+        #{/if}
+    </div>
+
+    <div class="form-group">
+        <label>Contraseña</label>
+        <input type="password" name="p">
+
+        #{if flash.get("errorPass")}
+        <div class="field-error">${flash.get("errorPass")}</div>
+        #{/if}
+    </div>
+
+    <button type="submit">Entrar</button>
+
+    #{/form}
+
+    <div class="helper">
+        ¿No tienes cuenta?
+        <a href="/registre">Regístrate</a>
+    </div>
+</main>
+
+<footer class="footer">
+    © 2025 Concertify
+</footer>
+
+</body>
+</html>

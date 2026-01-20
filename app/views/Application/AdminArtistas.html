@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin - Artistas</title>
+    <link rel="stylesheet" href="@{'/public/stylesheets/main.css'}">
+</head>
+<body>
+
+<header class="header">
+    <h1>Concertify</h1>
+    <div class="nav">
+        <div class="nav-left">
+            <a href="/">Inicio</a>
+        </div>
+
+        <div class="nav-right">
+            <a href="/admin/artistas">Gestion Artistas</a>
+            <a href="/admin/salas">Gestion Salas</a>
+            <a href="/admin/conciertos">Gestion Conciertos</a>
+            <a href="/admin/logout">Cerrar Sesión Admin</a>
+        </div>
+    </div>
+</header>
+
+<main class="page">
+
+    <div class="section-title">
+        <h2>Gestión de Artistas</h2>
+    </div>
+
+    #{if flash.error}
+    <p class="msg msg-error">${flash.error}</p>
+    #{/if}
+    #{if flash.success}
+    <p class="msg msg-ok">${flash.success}</p>
+    #{/if}
+
+    <div class="admin-grid">
+
+        <div class="admin-card">
+            <h3>Registrar artista</h3>
+
+            #{form @Application.adminGuardarArtista()}
+
+            <div class="form-group">
+                <label>Nombre artístico</label>
+                <input type="text" name="nombre_artistico" value="">
+            </div>
+
+            <div class="form-group">
+                <label>Nombre</label>
+                <input type="text" name="nombre" value="">
+
+            </div>
+
+            <div class="form-group">
+                <label>Contraseña</label>
+                <input type="text" name="password" value="">
+            </div>
+
+            <div class="form-group">
+                <label>Edad</label>
+                <input type="text" name="edad" value="">
+            </div>
+
+            <button type="submit">Registrar artista</button>
+            #{/form}
+        </div>
+
+        <div class="admin-card">
+            <h3>Listado de artistas</h3>
+
+            <table class="admin-table">
+                <thead>
+                <tr>
+                    <th class="col-center">Nombre artístico</th>
+                    <th class="col-center">Nombre</th>
+                    <th class="col-center">Edad</th>
+                    <th class="col-center">Conciertos</th>
+                    <th class="col-center">Acciones</th>
+
+                </tr>
+                </thead>
+
+                <tbody>
+                #{list items:artistas, as:'a'}
+                <tr>
+                    <td class="col-center">${a.nombre_artistico}</td>
+                    <td class="col-center">${a.nombre}</td>
+                    <td class="col-center">${a.edad}</td>
+                    <td class="col-center">${a.conciertos.size()}</td>
+                    <td class="actions">
+                        <button type="button"
+                                class="btn btn-soft js-edit-artist"
+                                data-id="${a.id}"
+                                data-nombre_artistico="${a.nombre_artistico}"
+                                data-nombre="${a.nombre}"
+                                data-password="${a.password}"
+                                data-edad="${a.edad}">
+                            Editar
+                        </button>
+
+                        #{form @Application.adminEliminarArtista()}
+                        <input type="hidden" name="id" value="${a.id}">
+                        <button class="btn btn-danger" type="submit">Eliminar</button>
+                        #{/form}
+                    </td>
+                </tr>
+                #{/list}
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+
+</main>
+
+<footer class="footer">© 2025 Concertify</footer>
+
+<div class="modal-overlay ${showEditModal ? 'is-open' : ''}" id="artistModal">
+    <div class="modal">
+        <div class="modal-header">
+            <h3 id="modalTitle">Editar artista</h3>
+            <button type="button" class="modal-close" id="closeArtistModal">×</button>
+        </div>
+
+        #{form @Application.adminGuardarArtista()}
+        <input type="hidden" name="id" id="artist_id" value="${artistaEdit != null ? artistaEdit.id : ''}">
+
+        <div class="form-group">
+            <label>Nombre artístico</label>
+            <input type="text" name="nombre_artistico" id="artist_nombre_artistico" required
+                   value="${artistaEdit != null ? artistaEdit.nombre_artistico : ''}">
+
+            #{if nombreArtisticoError}
+            <div class="field-error">${nombreArtisticoError}</div>
+            #{/if}
+        </div>
+
+        <div class="form-group">
+            <label>Nombre</label>
+            <input type="text" name="nombre" id="artist_nombre" required
+                   value="${artistaEdit != null ? artistaEdit.nombre : ''}">
+        </div>
+
+        <div class="form-group">
+            <label>Contraseña</label>
+            <input type="text" name="password" id="artist_password" required
+                   value="${artistaEdit != null ? artistaEdit.password : ''}">
+        </div>
+
+        <div class="form-group">
+            <label>Edad</label>
+            <input type="number" name="edad" id="artist_edad" min="0" required
+                   value="${artistaEdit != null ? artistaEdit.edad : ''}">
+        </div>
+
+        <button type="submit">Guardar</button>
+        <button type="button" class="btn btn-soft" id="cancelArtistModal">Cancelar</button>
+        #{/form}
+    </div>
+</div>
+
+<script>
+    (function () {
+      const overlay = document.getElementById('artistModal');
+      const closeBtn = document.getElementById('closeArtistModal');
+      const cancelBtn = document.getElementById('cancelArtistModal');
+
+      const idEl = document.getElementById('artist_id');
+      const naEl = document.getElementById('artist_nombre_artistico');
+      const nEl  = document.getElementById('artist_nombre');
+      const pEl  = document.getElementById('artist_password');
+      const eEl  = document.getElementById('artist_edad');
+
+      function openModal() {
+        overlay.classList.add('is-open');
+      }
+      function closeModal() {
+        overlay.classList.remove('is-open');
+      }
+
+      document.querySelectorAll('.js-edit-artist').forEach(btn => {
+        btn.addEventListener('click', () => {
+          idEl.value = btn.dataset.id || '';
+          naEl.value = btn.dataset.nombre_artistico || '';
+          nEl.value  = btn.dataset.nombre || '';
+          pEl.value  = btn.dataset.password || '';
+          eEl.value  = btn.dataset.edad || '0';
+          openModal();
+        });
+      });
+
+      closeBtn.addEventListener('click', closeModal);
+      cancelBtn.addEventListener('click', closeModal);
+
+      overlay.addEventListener('click', (ev) => {
+        if (ev.target === overlay) closeModal();
+      });
+    })();
+</script>
+
+</body>
+</html>

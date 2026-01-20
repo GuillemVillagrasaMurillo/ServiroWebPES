@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Artistas</title>
+    <link rel="stylesheet" href="@{'/public/stylesheets/main.css'}">
+</head>
+
+<body>
+
+<header class="header">
+    <h1>Concertify</h1>
+
+    <div class="nav">
+        <div class="nav-left">
+            <a href="/">Inicio</a>
+        </div>
+
+        <div class="nav-right">
+
+            #{if session.get("isAdmin") != null}
+            <a href="/admin/artistas">Gestion Artistas</a>
+            <a href="/admin/salas">Gestion Salas</a>
+            <a href="/admin/conciertos">Gestion Conciertos</a>
+            <a href="/admin/logout">Cerrar Sesión Admin</a>
+            #{/if}
+
+            #{elseif session.get("username") != null}
+            <span>Hola ${session.get("username")} </span>
+            <a href="/logout">Cerrar Sesión</a>
+            #{/elseif}
+
+            #{else}
+            <a href="/login">Iniciar Sesión</a>
+            <a href="/registre">Registrarse</a>
+            #{/else}
+
+        </div>
+    </div>
+</header>
+
+<main class="page">
+    <div class="section-title">
+        <h2>Artistas populares</h2>
+    </div>
+
+    <div class="cards-grid">
+        #{list items:artistas, as:'a'}
+        <div class="card">
+            <div class="card-img">
+                <div class="avatar">${a.nombre_artistico.substring(0,1).toUpperCase()}</div>
+            </div>
+
+            <div class="card-body">
+                <div class="card-title">${a.nombre_artistico}</div>
+                <div class="card-subtitle">${a.nombre} · ${a.edad} años</div>
+
+                <div class="card-meta">
+                    ${a.conciertos.size()} conciertos
+                </div>
+
+                <div class="card-actions">
+                    <button type="button"
+                            class="btn btn-soft js-artist-details"
+                            data-nombre_artistico="${a.nombre_artistico}"
+                            data-nombre="${a.nombre}"
+                            data-edad="${a.edad}"
+                            data-conciertos="${a.conciertos != null ? a.conciertos.size() : 0}">
+                        Detalles
+                    </button>
+                    #{if a.conciertos != null && a.conciertos.size() > 0}
+                    #{set c:a.conciertos.get(0) /}
+                    <button type="button"
+                            class="btn btn-black js-artist-concerts"
+                            data-fecha="${a.conciertos != null && a.conciertos.size() > 0 ? a.conciertos.get(0).fecha : '-'}"
+                            data-estado="${a.conciertos != null && a.conciertos.size() > 0 ? a.conciertos.get(0).estado : '-'}"
+                            data-sala="${a.conciertos != null && a.conciertos.size() > 0 && a.conciertos.get(0).sala != null ? a.conciertos.get(0).sala.nombre : '-'}"
+                            data-direccion="${a.conciertos != null && a.conciertos.size() > 0 && a.conciertos.get(0).sala != null ? a.conciertos.get(0).sala.direccion : '-'}"
+                            data-concerts-id="concerts_${a.id}">
+                        Conciertos
+                    </button>
+                    #{/if}
+                    <div id="concerts_${a.id}" style="display:none;">
+                        #{if a.conciertos != null && a.conciertos.size() > 1}
+                        #{set first:a.conciertos.get(0) /}
+                        #{list items:a.conciertos, as:'c'}
+                        #{if c.id != first.id}
+                        <div class="other-concert">
+                            <p><strong>Fecha:</strong> ${c.fecha}</p>
+                            <p><strong>Estado:</strong> ${c.estado}</p>
+                            <p><strong>Sala:</strong> ${c.sala != null ? c.sala.nombre : '-'}</p>
+                            <p><strong>Dirección:</strong> ${c.sala != null ? c.sala.direccion : '-'}</p>
+                        </div>
+                        <hr style="margin: 10px 0;">
+                        #{/if}
+                        #{/list}
+                        #{/if}
+                    </div>
+                </div>
+            </div>
+        </div>
+        #{/list}
+    </div>
+</main>
+
+<footer class="footer">
+    © 2025 Concertify
+</footer>
+
+<div class="modal-overlay" id="artistDetailsModal">
+    <div class="modal">
+        <div class="modal-header">
+            <h3 id="artistDetailsTitle">Detalles del artista</h3>
+            <button type="button" class="modal-close" id="closeArtistDetails">×</button>
+        </div>
+
+        <div class="modal-content">
+            <p><strong>Nombre artístico:</strong> <span id="det_nombre_artistico"></span></p>
+            <p><strong>Nombre:</strong> <span id="det_nombre"></span></p>
+            <p><strong>Edad:</strong> <span id="det_edad"></span></p>
+            <p><strong>Nº conciertos:</strong> <span id="det_conciertos"></span></p>
+        </div>
+
+        <div style="margin-top: 14px;">
+            <button type="button" class="btn btn-soft" id="okArtistDetails">Cerrar</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function () {
+      const overlay = document.getElementById('artistDetailsModal');
+      const closeBtn = document.getElementById('closeArtistDetails');
+      const okBtn = document.getElementById('okArtistDetails');
+
+      const naEl = document.getElementById('det_nombre_artistico');
+      const nEl  = document.getElementById('det_nombre');
+      const eEl  = document.getElementById('det_edad');
+      const cEl  = document.getElementById('det_conciertos');
+
+      function openModal() { overlay.classList.add('is-open'); }
+      function closeModal() { overlay.classList.remove('is-open'); }
+
+      document.querySelectorAll('.js-artist-details').forEach(btn => {
+        btn.addEventListener('click', () => {
+          naEl.textContent = btn.dataset.nombre_artistico || '-';
+          nEl.textContent  = btn.dataset.nombre || '-';
+          eEl.textContent  = btn.dataset.edad || '-';
+          cEl.textContent  = btn.dataset.conciertos || '0';
+          openModal();
+        });
+      });
+
+      closeBtn.addEventListener('click', closeModal);
+      okBtn.addEventListener('click', closeModal);
+
+      overlay.addEventListener('click', (ev) => {
+        if (ev.target === overlay) closeModal();
+      });
+    })();
+</script>
+
+<div class="modal-overlay" id="conciertoDetailsModal">
+    <div class="modal">
+        <div class="modal-header">
+            <h3>Detalles del concierto</h3>
+            <button type="button" class="modal-close" id="closeConciertoDetails">×</button>
+        </div>
+
+        <div class="modal-content">
+            <p><strong>Fecha:</strong> <span id="det_concierto_fecha"></span></p>
+            <p><strong>Estado:</strong> <span id="det_concierto_estado"></span></p>
+            <p><strong>Sala:</strong> <span id="det_concierto_sala"></span></p>
+            <p><strong>Dirección:</strong> <span id="det_concierto_direccion"></span></p>
+
+            <!-- BLOQUE DE OTROS CONCIERTOS: solo se verá si hay más de 1 -->
+            <div id="det_conciertos_block" style="display:none;">
+                <hr style="margin: 12px 0;">
+                <p><strong>Conciertos:</strong></p>
+                <div id="det_conciertos_list"></div>
+            </div>
+        </div>
+
+        <button type="button" class="btn btn-soft" id="okConciertoDetails">Cerrar</button>
+    </div>
+</div>
+
+<script>
+    (function () {
+      const overlay = document.getElementById('conciertoDetailsModal');
+      const closeBtn = document.getElementById('closeConciertoDetails');
+      const okBtn = document.getElementById('okConciertoDetails');
+
+      const fEl = document.getElementById('det_concierto_fecha');
+      const eEl = document.getElementById('det_concierto_estado');
+      const sEl = document.getElementById('det_concierto_sala');
+      const dEl = document.getElementById('det_concierto_direccion');
+
+      const concertsBlock = document.getElementById('det_conciertos_block');
+      const concertsList = document.getElementById('det_conciertos_list');
+
+      function openModal() { overlay.classList.add('is-open'); }
+      function closeModal() { overlay.classList.remove('is-open'); }
+
+      document.querySelectorAll('.js-artist-concerts').forEach(btn => {
+        btn.addEventListener('click', () => {
+          // Concierto principal
+          fEl.textContent = btn.dataset.fecha || '-';
+          eEl.textContent = btn.dataset.estado || '-';
+          sEl.textContent = btn.dataset.sala || '-';
+          dEl.textContent = btn.dataset.direccion || '-';
+
+          // Otros conciertos
+          const sourceId = btn.dataset.concertsId;
+          const source = document.getElementById(sourceId);
+          const html = (source && source.innerHTML) ? source.innerHTML.trim() : "";
+
+          if (!html) {
+            concertsBlock.style.display = "none";
+            concertsList.innerHTML = "";
+          } else {
+            concertsBlock.style.display = "block";
+            concertsList.innerHTML = html;
+          }
+
+          openModal();
+        });
+      });
+
+      closeBtn.addEventListener('click', closeModal);
+      okBtn.addEventListener('click', closeModal);
+
+      overlay.addEventListener('click', (ev) => {
+        if (ev.target === overlay) closeModal();
+      });
+    })();
+</script>
+</body>
+</html>
